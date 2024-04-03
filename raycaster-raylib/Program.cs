@@ -10,11 +10,9 @@ namespace raycaster_raylib
         private const int ScreenWidth = 1920;
         private const int ScreenHeight = 1080;
         
-        
-        
         static void Main()
         {
-            int[,] WorldMap = 
+            int[,] worldMap = 
                  {
                      {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
                      {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
@@ -57,7 +55,6 @@ namespace raycaster_raylib
             {
                 Raylib.BeginDrawing();
                 Raylib.ClearBackground(Color.Blank);
-                Raylib.DrawFPS(10, 10);
 
                 for (int x = 0; x < ScreenWidth; x++)
                 {
@@ -89,7 +86,7 @@ namespace raycaster_raylib
                     if (rayDirX < 0)
                     {
                         stepX = -1;
-                        sideDistX = (posX = mapX) * deltaDistX;
+                        sideDistX = (posX - mapX) * deltaDistX;
                     }
                     else
                     {
@@ -123,7 +120,7 @@ namespace raycaster_raylib
                             side = 1;
                         }
 
-                        if (WorldMap[mapX, mapY] > 0)
+                        if (worldMap[mapX, mapY] > 0)
                             hit = 1;
                     }
 
@@ -144,7 +141,7 @@ namespace raycaster_raylib
                     if (drawEnd >= ScreenHeight) drawEnd = ScreenHeight - 1;
 
                     Color colour;
-                    switch (WorldMap[mapX, mapY])
+                    switch (worldMap[mapX, mapY])
                     {
                         case 1:
                             colour = Color.Red;
@@ -174,17 +171,21 @@ namespace raycaster_raylib
                 var moveSpeed = frameTime * 5.0;
                 var rotSpeed = frameTime * 3.0;
 
-                if (Raylib.IsKeyPressed(KeyboardKey.W))
+                if (Raylib.IsKeyDown(KeyboardKey.W))
                 {
-                    if (WorldMap[(int)(posX + dirX * moveSpeed), (int)posY] == 0) posX += dirX * moveSpeed;
-                    if (WorldMap[(int)posX, (int)(posY + dirY * moveSpeed)] == 0) posY += dirY * moveSpeed;
+                    var resultX = (int)(posX + dirX * moveSpeed);
+                    var resultY = (int)(posY + dirY * moveSpeed);
+                    if (worldMap[resultX, (int)posY] == 0) posX += dirX * moveSpeed;
+                    if (worldMap[(int)posX, resultY] == 0) posY += dirY * moveSpeed;
                 }
-                if (Raylib.IsKeyPressed(KeyboardKey.S))
+                if (Raylib.IsKeyDown(KeyboardKey.S))
                 {
-                    if (WorldMap[(int)(posX - dirX * moveSpeed), (int)posY] == 0) posX -= dirX * moveSpeed;
-                    if (WorldMap[(int)posX, (int)(posY - dirY * moveSpeed)] == 0) posY -= dirY * moveSpeed;
+                    var resultX = (int)(posX - dirX * moveSpeed);
+                    var resultY = (int)(posY - dirY * moveSpeed);
+                    if (worldMap[resultX, (int)posY] == 0) posX -= dirX * moveSpeed;
+                    if (worldMap[(int)posX, resultY] == 0) posY -= dirY * moveSpeed;
                 }
-                if (Raylib.IsKeyPressed(KeyboardKey.D))
+                if (Raylib.IsKeyDown(KeyboardKey.D))
                 {
                     var oldDirX = dirX;
                     dirX = dirX * Math.Cos(-rotSpeed) - dirY * Math.Sin(-rotSpeed);
@@ -193,7 +194,7 @@ namespace raycaster_raylib
                     planeX = planeX * Math.Cos(-rotSpeed) - planeY * Math.Sin(-rotSpeed);
                     planeY = oldPlaneX * Math.Sin(-rotSpeed) + planeY * Math.Cos(-rotSpeed);
                 }
-                if (Raylib.IsKeyPressed(KeyboardKey.A))
+                if (Raylib.IsKeyDown(KeyboardKey.A))
                 {
                     var oldDirX = dirX;
                     dirX = dirX * Math.Cos(rotSpeed) - dirY * Math.Sin(rotSpeed);
@@ -202,6 +203,8 @@ namespace raycaster_raylib
                     planeX = planeX * Math.Cos(rotSpeed) - planeY * Math.Sin(rotSpeed);
                     planeY = oldPlaneX * Math.Sin(rotSpeed) + planeY * Math.Cos(rotSpeed);
                 }
+                
+                Raylib.DrawFPS(10, 10);
                 
                 Raylib.EndDrawing();
             }
