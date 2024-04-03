@@ -9,6 +9,7 @@ namespace raycaster_raylib
         private const int MapHeight = 24;
         private const int ScreenWidth = 1920;
         private const int ScreenHeight = 1080;
+        private const int GridSpacing = 21;
         
         static void Main()
         {
@@ -163,29 +164,36 @@ namespace raycaster_raylib
                     //give x and y side a different brightness
                     //if(side == 1) {color = color / 2;}
                     
+                    // Draw Walls
                     Raylib.DrawLine(x, drawStart, x, drawEnd, colour);
+                    // Draw Ceiling
+                    Raylib.DrawLine(x, 0, x, drawStart, Color.Gold);
+                    //Draw Floor
+                    Raylib.DrawLine(x, ScreenHeight, x, drawEnd, Color.DarkGray);
                 }
+                
+                DrawMap(worldMap, posX, posY, dirX, dirY);
                 
                 var frameTime = Raylib.GetFrameTime();
 
                 var moveSpeed = frameTime * 5.0;
                 var rotSpeed = frameTime * 3.0;
 
-                if (Raylib.IsKeyDown(KeyboardKey.W))
+                if (Raylib.IsKeyDown(KeyboardKey.W) || Raylib.IsKeyDown(KeyboardKey.Up))
                 {
                     var resultX = (int)(posX + dirX * moveSpeed);
                     var resultY = (int)(posY + dirY * moveSpeed);
                     if (worldMap[resultX, (int)posY] == 0) posX += dirX * moveSpeed;
                     if (worldMap[(int)posX, resultY] == 0) posY += dirY * moveSpeed;
                 }
-                if (Raylib.IsKeyDown(KeyboardKey.S))
+                if (Raylib.IsKeyDown(KeyboardKey.S) || Raylib.IsKeyDown(KeyboardKey.Down))
                 {
                     var resultX = (int)(posX - dirX * moveSpeed);
                     var resultY = (int)(posY - dirY * moveSpeed);
                     if (worldMap[resultX, (int)posY] == 0) posX -= dirX * moveSpeed;
                     if (worldMap[(int)posX, resultY] == 0) posY -= dirY * moveSpeed;
                 }
-                if (Raylib.IsKeyDown(KeyboardKey.D))
+                if (Raylib.IsKeyDown(KeyboardKey.D) || Raylib.IsKeyDown(KeyboardKey.Right))
                 {
                     var oldDirX = dirX;
                     dirX = dirX * Math.Cos(-rotSpeed) - dirY * Math.Sin(-rotSpeed);
@@ -194,7 +202,7 @@ namespace raycaster_raylib
                     planeX = planeX * Math.Cos(-rotSpeed) - planeY * Math.Sin(-rotSpeed);
                     planeY = oldPlaneX * Math.Sin(-rotSpeed) + planeY * Math.Cos(-rotSpeed);
                 }
-                if (Raylib.IsKeyDown(KeyboardKey.A))
+                if (Raylib.IsKeyDown(KeyboardKey.A) || Raylib.IsKeyDown(KeyboardKey.Left))
                 {
                     var oldDirX = dirX;
                     dirX = dirX * Math.Cos(rotSpeed) - dirY * Math.Sin(rotSpeed);
@@ -210,6 +218,91 @@ namespace raycaster_raylib
             }
             
             Raylib.CloseWindow();
+        }
+
+        public static void DrawMap(int[,] worldMap, double posX, double posY, double dirX, double dirY)
+        {
+            var transBlack = new Color
+            {
+                A = 127,
+                B = 0,
+                G = 0,
+                R = 0
+            };
+            var transWhite = new Color
+            {
+                A = 127,
+                B = 245,
+                G = 245,
+                R = 245
+            };
+            var transYellow = new Color
+            {
+                A = 127,
+                B = 0,
+                G = 249,
+                R = 253
+            };
+            var transBlue = new Color
+            {
+                A = 127,
+                B = 241,
+                G = 121,
+                R = 0
+            };
+            var transGray = new Color
+            {
+                A = 127,
+                B = 200,
+                G = 200,
+                R = 200
+            };
+            var transGreen = new Color
+            {
+                A = 127,
+                B = 48,
+                G = 228,
+                R = 0
+            };
+            
+            for (int i = 0; i < MapHeight; i++)
+            {
+                for (int j = 0; j < MapWidth; j++)
+                {
+                    var cellPosX = (j + 1) * GridSpacing;
+                    var cellPosY = (i + 1) * GridSpacing;
+                    
+                    switch (worldMap[i, j])
+                    {
+                        case 0:
+                           Raylib.DrawRectangle(cellPosX, cellPosY, 20, 20, transBlack);
+                           break;
+                        case 1:
+                           Raylib.DrawRectangle(cellPosX, cellPosY, 20, 20, transGray);
+                           break;
+                        case 2:
+                           Raylib.DrawRectangle(cellPosX, cellPosY, 20, 20, transGreen);
+                           break;
+                        case 3:
+                           Raylib.DrawRectangle(cellPosX, cellPosY, 20, 20, transBlue);
+                           break;
+                        case 4:
+                           Raylib.DrawRectangle(cellPosX, cellPosY, 20, 20, transWhite);
+                           break;
+                        case 5:
+                           Raylib.DrawRectangle(cellPosX, cellPosY, 20, 20, transYellow);
+                           break;
+                        default:
+                           Raylib.DrawRectangle(cellPosX, cellPosY, 20, 20, transBlack);
+                           break;
+                    }
+
+                    if (i == (int)posY && j == (int)posX)
+                    {
+                        Raylib.DrawRectangle(cellPosY + 5, cellPosX + 5, 10, 10, transYellow);
+                    }
+                }
+            }
         }
     }
 }
