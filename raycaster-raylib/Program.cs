@@ -62,6 +62,8 @@ namespace raycaster_raylib
             
             Raylib.InitWindow(1920, 1080, "Shallom");
             
+            var enemyImage = Raylib.LoadTexture("../../../Resources/enemy.png");
+            
             Raylib.SetTargetFPS(60);
 
             while (!Raylib.WindowShouldClose())
@@ -281,6 +283,7 @@ namespace raycaster_raylib
                         break;
                     case GameState.Battle:
                         Raylib.ClearBackground(Color.Beige);
+                        Raylib.DrawTexture(enemyImage, 800, 200, Color.Black);
                         Raylib.DrawText("BATTLE!", 200, 200, 80, Color.Black);
                         Raylib.DrawText("Random monster has appeared", 200, 300, 40, Color.Black);
                         Raylib.DrawText("Press 'X' to run away", 200, 400, 40, Color.Black);
