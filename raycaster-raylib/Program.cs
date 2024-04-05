@@ -41,12 +41,14 @@ namespace raycaster_raylib
                      {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
                  };
             
-            var posX = 22.0;
-            var posY = 22.0;
+            var posX = 22.5;
+            var posY = 22.5;
             var dirX = -1.0;
             var dirY = 0.0;
             var planeX = 0.0;
             var planeY = 0.66;
+
+            var drawMap = false;
             
             Raylib.InitWindow(1920, 1080, "Shallom");
             
@@ -171,8 +173,12 @@ namespace raycaster_raylib
                     //Draw Floor
                     Raylib.DrawLine(x, ScreenHeight, x, drawEnd, Color.DarkGray);
                 }
+
+                if (drawMap)
+                {
+                    DrawMap(worldMap, posX, posY, dirX, dirY);
+                }
                 
-                DrawMap(worldMap, posX, posY, dirX, dirY);
                 
                 var frameTime = Raylib.GetFrameTime();
 
@@ -185,36 +191,44 @@ namespace raycaster_raylib
                 {
                     var resultX = (int)(posX + dirX * stepSpeed);
                     var resultY = (int)(posY + dirY * stepSpeed);
+                    
                     if (worldMap[resultX, (int)posY] == 0) posX += dirX * stepSpeed;
                     if (worldMap[(int)posX, resultY] == 0) posY += dirY * stepSpeed;
-                    if (worldMap[resultX, (int)posY] >= 1) posX -= dirX * (stepSpeed / 2);
-                    if (worldMap[(int)posX, resultY] >= 1) posY -= dirY * (stepSpeed / 2);
                 }
                 if (Raylib.IsKeyPressed(KeyboardKey.S) || Raylib.IsKeyPressed(KeyboardKey.Down))
                 {
                     var resultX = (int)(posX - dirX * stepSpeed);
                     var resultY = (int)(posY - dirY * stepSpeed);
+                    
                     if (worldMap[resultX, (int)posY] == 0) posX -= dirX * stepSpeed;
                     if (worldMap[(int)posX, resultY] == 0) posY -= dirY * stepSpeed;
                 }
+
                 if (Raylib.IsKeyPressed(KeyboardKey.D) || Raylib.IsKeyPressed(KeyboardKey.Right))
                 {
                     var oldDirX = dirX;
+                    var oldPlaneX = planeX;
+
                     dirX = dirX * Math.Cos(-stepTurn) - dirY * Math.Sin(-stepTurn);
                     dirY = oldDirX * Math.Sin(-stepTurn) + dirY * Math.Cos(-stepTurn);
-                    var oldPlaneX = planeX;
+
                     planeX = planeX * Math.Cos(-stepTurn) - planeY * Math.Sin(-stepTurn);
                     planeY = oldPlaneX * Math.Sin(-stepTurn) + planeY * Math.Cos(-stepTurn);
                 }
+
                 if (Raylib.IsKeyPressed(KeyboardKey.A) || Raylib.IsKeyPressed(KeyboardKey.Left))
                 {
                     var oldDirX = dirX;
+                    var oldPlaneX = planeX;
+                    
                     dirX = dirX * Math.Cos(stepTurn) - dirY * Math.Sin(stepTurn);
                     dirY = oldDirX * Math.Sin(stepTurn) + dirY * Math.Cos(stepTurn);
-                    var oldPlaneX = planeX;
+                    
                     planeX = planeX * Math.Cos(stepTurn) - planeY * Math.Sin(stepTurn);
                     planeY = oldPlaneX * Math.Sin(stepTurn) + planeY * Math.Cos(stepTurn);
                 }
+
+                if (Raylib.IsKeyPressed(KeyboardKey.M)) drawMap = true;
                 
                 Raylib.DrawFPS(10, 10);
                 
