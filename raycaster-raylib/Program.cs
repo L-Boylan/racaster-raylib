@@ -228,7 +228,7 @@ namespace raycaster_raylib
                     planeY = oldPlaneX * Math.Sin(stepTurn) + planeY * Math.Cos(stepTurn);
                 }
 
-                if (Raylib.IsKeyPressed(KeyboardKey.M)) drawMap = true;
+                if (Raylib.IsKeyPressed(KeyboardKey.M)) drawMap = !drawMap;
                 
                 Raylib.DrawFPS(10, 10);
                 
