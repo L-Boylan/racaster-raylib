@@ -15,7 +15,8 @@ namespace raycaster_raylib
         {
             MainMenu,
             FirstPerson,
-            Pause
+            Pause,
+            Battle
         }
         
         static void Main()
@@ -61,6 +62,8 @@ namespace raycaster_raylib
             
             Raylib.InitWindow(1920, 1080, "Shallom");
             
+            var enemyImage = Raylib.LoadTexture("../../../Resources/enemy.png");
+            
             Raylib.SetTargetFPS(60);
 
             while (!Raylib.WindowShouldClose())
@@ -96,7 +99,9 @@ namespace raycaster_raylib
                         Raylib.DrawText("MAIN MENU", (ScreenWidth / 2 - 100), (ScreenHeight / 2 - 20), 40, Color.Black);
                         Raylib.DrawText("press enter to start", (ScreenWidth / 2 - 100), (ScreenHeight / 2 + 40), 20, Color.Black);
                         break;
-                    case GameState.FirstPerson: 
+                    case GameState.FirstPerson:
+                        var random = new Random();
+                        
                         Raylib.ClearBackground(Color.Blank);
         
                         for (int x = 0; x < ScreenWidth; x++)
@@ -234,6 +239,7 @@ namespace raycaster_raylib
                             
                             if (worldMap[resultX, (int)posY] == 0) posX += dirX * stepSpeed;
                             if (worldMap[(int)posX, resultY] == 0) posY += dirY * stepSpeed;
+                            if (random.Next(10) == 1) currentScreen = GameState.Battle;
                         }
                         if (Raylib.IsKeyPressed(KeyboardKey.S) || Raylib.IsKeyPressed(KeyboardKey.Down))
                         {
@@ -242,6 +248,7 @@ namespace raycaster_raylib
                             
                             if (worldMap[resultX, (int)posY] == 0) posX -= dirX * stepSpeed;
                             if (worldMap[(int)posX, resultY] == 0) posY -= dirY * stepSpeed;
+                            if (random.Next(10) == 1) currentScreen = GameState.Battle;
                         }
         
                         if (Raylib.IsKeyPressed(KeyboardKey.D) || Raylib.IsKeyPressed(KeyboardKey.Right))
@@ -273,6 +280,14 @@ namespace raycaster_raylib
                     case GameState.Pause:
                         Raylib.ClearBackground(Color.LightGray);
                         Raylib.DrawText("PAUSED", 200, 200, 80, Color.Black);
+                        break;
+                    case GameState.Battle:
+                        Raylib.ClearBackground(Color.Beige);
+                        Raylib.DrawTexture(enemyImage, 800, 200, Color.Black);
+                        Raylib.DrawText("BATTLE!", 200, 200, 80, Color.Black);
+                        Raylib.DrawText("Random monster has appeared", 200, 300, 40, Color.Black);
+                        Raylib.DrawText("Press 'X' to run away", 200, 400, 40, Color.Black);
+                        if (Raylib.IsKeyPressed(KeyboardKey.X)) currentScreen = GameState.FirstPerson;
                         break;
                 }
                
