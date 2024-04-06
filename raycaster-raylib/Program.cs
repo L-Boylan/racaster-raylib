@@ -16,7 +16,8 @@ namespace raycaster_raylib
             MainMenu,
             FirstPerson,
             Pause,
-            Battle
+            Battle,
+            BattleVictory
         }
 
         private enum DangerLevel
@@ -24,6 +25,12 @@ namespace raycaster_raylib
             Low,
             Medium,
             High
+        }
+
+        private enum Turn
+        {
+            PlayerTurn,
+            EnemyTurn
         }
         
         static void Main()
@@ -71,10 +78,26 @@ namespace raycaster_raylib
             var currentDangerLevel = DangerLevel.Low;
             var circleX = 1800;
             var circleY = 980;
+
+            var player = new Entity
+            {
+                Attack = 20,
+                Health = 100,
+                Defence = 10,
+                IsDefending = false
+            };
+            var enemy = new Entity
+            {
+                Attack = 15,
+                Health = 100,
+                Defence = 8,
+                IsDefending = false
+            };
             
             Raylib.InitWindow(1920, 1080, "Shallom");
             
             var enemyImage = Raylib.LoadTexture("../../../Resources/enemy.png");
+            var playerImage = Raylib.LoadTexture("../../../Resources/player.png");
             
             Raylib.SetTargetFPS(60);
 
@@ -346,14 +369,68 @@ namespace raycaster_raylib
                         Raylib.DrawText("PAUSED", 200, 200, 80, Color.Black);
                         break;
                     case GameState.Battle:
+                        var turn = new Random();
+                        var currentTurn = Turn.PlayerTurn;
                         Raylib.ClearBackground(Color.Beige);
-                        Raylib.DrawTexture(enemyImage, 800, 200, Color.Black);
+                        var enemyPosition = new Vector2
+                        {
+                            X = 800.0f,
+                            Y = 200.0f
+                        };
+                        var playerPosition = new Vector2
+                        {
+                            X = 800.0f,
+                            Y = 500.0f
+                        };
+                        Raylib.DrawTextureEx(enemyImage, enemyPosition, 0.0f, 8.0f, Color.White);
+                        Raylib.DrawTextureEx(playerImage, playerPosition, 0.0f, 8.0f, Color.White);
+                        
                         Raylib.DrawText("BATTLE!", 200, 200, 80, Color.Black);
                         Raylib.DrawText("Random monster has appeared", 200, 300, 40, Color.Black);
-                        Raylib.DrawText("Press 'X' to run away", 200, 400, 40, Color.Black);
+                        
+                        Raylib.DrawText($"Enemy Health: {enemy.Health}", 1200, 200, 30, Color.Black);
+                        Raylib.DrawText($"Player Health: {player.Health}", 1200, 500, 30, Color.Black);
+                        
+                        switch (currentTurn)
+                        {
+                            case Turn.PlayerTurn:
+                                Raylib.DrawText("Press 'A' to attack", 200, 500, 40, Color.Black);
+                                Raylib.DrawText("Press 'D' to Defend", 200, 600, 40, Color.Black);
+                                Raylib.DrawText("Press 'X' to run away", 200, 700, 40, Color.Black);
+                                if (Raylib.IsKeyPressed(KeyboardKey.A))
+                                {
+                                    Raylib.DrawText($"-{player.Attack}", 840, 200, 30, Color.Black);
+                                    if (enemy.IsDefending)
+                                    {
+                                        enemy.Health -= (player.Attack - enemy.Defence);
+                                    }
+                                    else
+                                    {
+                                        enemy.Health -= player.Attack;
+                                    }
+                                }
+
+                                if (Raylib.IsKeyPressed(KeyboardKey.D)) player.IsDefending = true;
+                                if (Raylib.IsKeyPressed(KeyboardKey.X)) currentScreen = GameState.FirstPerson;
+                                if (enemy.Health <= 0) currentScreen = GameState.BattleVictory;
+                                
+                                break;
+                            case Turn.EnemyTurn:
+                                break;
+                        }
+                        
                         currentSteps = 0;
                         currentDangerLevel = DangerLevel.Low;
-                        if (Raylib.IsKeyPressed(KeyboardKey.X)) currentScreen = GameState.FirstPerson;
+                        break;
+                    case GameState.BattleVictory:
+                        Raylib.ClearBackground(Color.Gold);
+                        Raylib.DrawText("YOU WON!", 800, 600, 80, Color.Black);
+                        Raylib.DrawText("press enter to continue", 800, 800, 40, Color.Black);
+                        if (Raylib.IsKeyPressed(KeyboardKey.Enter))
+                        {
+                            currentScreen = GameState.FirstPerson;
+                            enemy.Health = 100;
+                        }
                         break;
                 }
                
