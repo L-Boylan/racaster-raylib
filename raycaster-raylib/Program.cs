@@ -18,6 +18,13 @@ namespace raycaster_raylib
             Pause,
             Battle
         }
+
+        private enum DangerLevel
+        {
+            Low,
+            Medium,
+            High
+        }
         
         static void Main()
         {
@@ -57,8 +64,13 @@ namespace raycaster_raylib
             var planeY = 0.66;
 
             var drawMap = false;
+            var currentSteps = 0;
+            var encounterChance = 100;
 
             var currentScreen = GameState.MainMenu;
+            var currentDangerLevel = DangerLevel.Low;
+            var circleX = 1800;
+            var circleY = 980;
             
             Raylib.InitWindow(1920, 1080, "Shallom");
             
@@ -239,7 +251,24 @@ namespace raycaster_raylib
                             
                             if (worldMap[resultX, (int)posY] == 0) posX += dirX * stepSpeed;
                             if (worldMap[(int)posX, resultY] == 0) posY += dirY * stepSpeed;
-                            if (random.Next(10) == 1) currentScreen = GameState.Battle;
+                            if (random.Next(encounterChance) == 1) currentScreen = GameState.Battle;
+
+                            if (currentSteps >= 10)
+                            {
+                                switch (currentDangerLevel)
+                                {
+                                    case DangerLevel.Low:
+                                        currentDangerLevel = DangerLevel.Medium;
+                                        currentSteps = 0;
+                                        break;
+                                    case DangerLevel.Medium:
+                                        currentDangerLevel = DangerLevel.High;
+                                        currentSteps = 0;
+                                        break;
+                                }
+                            }
+
+                            currentSteps++;
                         }
                         if (Raylib.IsKeyPressed(KeyboardKey.S) || Raylib.IsKeyPressed(KeyboardKey.Down))
                         {
@@ -248,7 +277,22 @@ namespace raycaster_raylib
                             
                             if (worldMap[resultX, (int)posY] == 0) posX -= dirX * stepSpeed;
                             if (worldMap[(int)posX, resultY] == 0) posY -= dirY * stepSpeed;
-                            if (random.Next(10) == 1) currentScreen = GameState.Battle;
+                            if (random.Next(encounterChance) == 1) currentScreen = GameState.Battle;
+                            
+                            if (currentSteps >= 10)
+                            {
+                                switch (currentDangerLevel)
+                                {
+                                    case DangerLevel.Low:
+                                        currentDangerLevel = DangerLevel.Medium;
+                                        break;
+                                    case DangerLevel.Medium:
+                                        currentDangerLevel = DangerLevel.High;
+                                        break;
+                                }
+                            }
+
+                            currentSteps++;
                         }
         
                         if (Raylib.IsKeyPressed(KeyboardKey.D) || Raylib.IsKeyPressed(KeyboardKey.Right))
@@ -273,6 +317,26 @@ namespace raycaster_raylib
                             planeX = planeX * Math.Cos(stepTurn) - planeY * Math.Sin(stepTurn);
                             planeY = oldPlaneX * Math.Sin(stepTurn) + planeY * Math.Cos(stepTurn);
                         }
+
+                        switch (currentDangerLevel)
+                        {
+                            case DangerLevel.Low:
+                                Raylib.DrawCircleLines(circleX, circleY, 51, Color.Black);
+                                Raylib.DrawCircle(circleX, circleY, 50, Color.SkyBlue);
+                                encounterChance = 1000;
+                                break;
+                            case DangerLevel.Medium:
+                                Raylib.DrawCircleLines(circleX, circleY, 51, Color.Black);
+                                Raylib.DrawCircle(circleX, circleY, 50, Color.Yellow);
+                                encounterChance = 100;
+                                break;
+                            case DangerLevel.High:
+                                Raylib.DrawCircleLines(circleX, circleY, 51, Color.Black);
+                                Raylib.DrawCircle(circleX, circleY, 50, Color.Red);
+                                encounterChance = 10;
+                                break;
+                            
+                        }
         
                         if (Raylib.IsKeyPressed(KeyboardKey.M)) drawMap = !drawMap;
                         
@@ -287,6 +351,8 @@ namespace raycaster_raylib
                         Raylib.DrawText("BATTLE!", 200, 200, 80, Color.Black);
                         Raylib.DrawText("Random monster has appeared", 200, 300, 40, Color.Black);
                         Raylib.DrawText("Press 'X' to run away", 200, 400, 40, Color.Black);
+                        currentSteps = 0;
+                        currentDangerLevel = DangerLevel.Low;
                         if (Raylib.IsKeyPressed(KeyboardKey.X)) currentScreen = GameState.FirstPerson;
                         break;
                 }
