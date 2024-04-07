@@ -16,7 +16,10 @@ namespace raycaster_raylib
             MainMenu,
             FirstPerson,
             Pause,
-            Battle
+            Battle,
+            BattleVictory,
+            GameOver,
+            GameVictory
         }
 
         private enum DangerLevel
@@ -24,6 +27,12 @@ namespace raycaster_raylib
             Low,
             Medium,
             High
+        }
+
+        private enum Turn
+        {
+            PlayerTurn,
+            EnemyTurn
         }
         
         static void Main()
@@ -72,9 +81,28 @@ namespace raycaster_raylib
             var circleX = 1800;
             var circleY = 980;
             
+            var currentTurn = Turn.PlayerTurn;
+            var enemiesDefeated = 0;
+
+            var player = new Entity
+            {
+                Attack = 20,
+                Health = 1000,
+                Defence = 10,
+                IsDefending = false
+            };
+            var enemy = new Entity
+            {
+                Attack = 15,
+                Health = 100,
+                Defence = 8,
+                IsDefending = false
+            };
+            
             Raylib.InitWindow(1920, 1080, "Shallom");
             
             var enemyImage = Raylib.LoadTexture("../../../Resources/enemy.png");
+            var playerImage = Raylib.LoadTexture("../../../Resources/player.png");
             
             Raylib.SetTargetFPS(60);
 
@@ -113,233 +141,244 @@ namespace raycaster_raylib
                         break;
                     case GameState.FirstPerson:
                         var random = new Random();
-                        
-                        Raylib.ClearBackground(Color.Blank);
-        
-                        for (int x = 0; x < ScreenWidth; x++)
+                        if (enemiesDefeated >= 5)
                         {
-                            //ray position and direction
-                            var cameraX = 2 * x / (double)ScreenWidth - 1;
-                            var rayDirX = dirX + planeX * cameraX;
-                            var rayDirY = dirY + planeY * cameraX;
-                            
-                            //what map box we're in
-                            var mapX = (int)posX;
-                            var mapY = (int)posY;
-        
-                            //ray length from current position to next x or y side
-                            double sideDistX;
-                            double sideDistY;
-                            
-                            //length of ray from one x or y side to next x or y side
-                            var deltaDistX = rayDirX == 0 ? 1e30 : Math.Abs(1 / rayDirX);
-                            var deltaDistY = rayDirY == 0 ? 1e30 : Math.Abs(1 / rayDirY);
-        
-                            double perpWallDist;
-        
-                            int stepX;
-                            int stepY;
-        
-                            var hit = 0;
-                            var side = 0;
-        
-                            if (rayDirX < 0)
+                            currentScreen = GameState.GameVictory;
+                        }
+                        else
+                        {
+                            Raylib.ClearBackground(Color.Blank);
+
+                            for (int x = 0; x < ScreenWidth; x++)
                             {
-                                stepX = -1;
-                                sideDistX = (posX - mapX) * deltaDistX;
-                            }
-                            else
-                            {
-                                stepX = 1;
-                                sideDistX = (mapX + 1.0 - posX) * deltaDistX;
-                            }
-        
-                            if (rayDirY < 0)
-                            {
-                                stepY = -1;
-                                sideDistY = (posY - mapY) * deltaDistY;
-                            }
-                            else
-                            {
-                                stepY = 1;
-                                sideDistY = (mapY + 1.0 - posY) * deltaDistY;
-                            }
-        
-                            while (hit == 0)
-                            {
-                                if (sideDistX < sideDistY)
+                                //ray position and direction
+                                var cameraX = 2 * x / (double)ScreenWidth - 1;
+                                var rayDirX = dirX + planeX * cameraX;
+                                var rayDirY = dirY + planeY * cameraX;
+
+                                //what map box we're in
+                                var mapX = (int)posX;
+                                var mapY = (int)posY;
+
+                                //ray length from current position to next x or y side
+                                double sideDistX;
+                                double sideDistY;
+
+                                //length of ray from one x or y side to next x or y side
+                                var deltaDistX = rayDirX == 0 ? 1e30 : Math.Abs(1 / rayDirX);
+                                var deltaDistY = rayDirY == 0 ? 1e30 : Math.Abs(1 / rayDirY);
+
+                                double perpWallDist;
+
+                                int stepX;
+                                int stepY;
+
+                                var hit = 0;
+                                var side = 0;
+
+                                if (rayDirX < 0)
                                 {
-                                    sideDistX += deltaDistX;
-                                    mapX += stepX;
-                                    side = 0;
+                                    stepX = -1;
+                                    sideDistX = (posX - mapX) * deltaDistX;
                                 }
                                 else
                                 {
-                                    sideDistY += deltaDistY;
-                                    mapY += stepY;
-                                    side = 1;
+                                    stepX = 1;
+                                    sideDistX = (mapX + 1.0 - posX) * deltaDistX;
                                 }
-        
-                                if (worldMap[mapX, mapY] > 0)
-                                    hit = 1;
-                            }
-        
-                            if (side == 0)
-                            {
-                                perpWallDist = (sideDistX - deltaDistX);
-                            }
-                            else
-                            {
-                                perpWallDist = (sideDistY - deltaDistY);
-                            }
-        
-                            var lineHeight = (int)(ScreenHeight / perpWallDist);
-        
-                            var drawStart = -lineHeight / 2 + ScreenHeight / 2;
-                            if (drawStart < 0) drawStart = 0;
-                            var drawEnd = lineHeight / 2 + ScreenHeight / 2;
-                            if (drawEnd >= ScreenHeight) drawEnd = ScreenHeight - 1;
-        
-                            Color colour;
-                            switch (worldMap[mapX, mapY])
-                            {
-                                case 1:
-                                    colour = Color.Red;
-                                    break;
-                                case 2:
-                                    colour = Color.Green;
-                                    break;
-                                case 3:
-                                    colour = Color.Blue;
-                                    break;
-                                case 4:
-                                    colour = Color.White;
-                                    break;
-                                default:
-                                    colour = Color.Yellow;
-                                    break;
-                            }
-        
-                            //give x and y side a different brightness
-                            //if(side == 1) {color = color / 2;}
-                            
-                            // Draw Walls
-                            Raylib.DrawLine(x, drawStart, x, drawEnd, colour);
-                            // Draw Ceiling
-                            Raylib.DrawLine(x, 0, x, drawStart, Color.Gold);
-                            //Draw Floor
-                            Raylib.DrawLine(x, ScreenHeight, x, drawEnd, Color.DarkGray);
-                        }
-        
-                        if (drawMap)
-                        {
-                            DrawMap(worldMap, posX, posY, dirX, dirY);
-                        }
-                        
-                        
-                        var frameTime = Raylib.GetFrameTime();
-        
-                        var moveSpeed = frameTime * 5.0;
-                        var stepSpeed = 1;
-                        var rotSpeed = frameTime * 3.0;
-                        var stepTurn = Math.PI / 2;
-        
-                        if (Raylib.IsKeyPressed(KeyboardKey.W) || Raylib.IsKeyPressed(KeyboardKey.Up))
-                        {
-                            var resultX = (int)(posX + dirX * stepSpeed);
-                            var resultY = (int)(posY + dirY * stepSpeed);
-                            
-                            if (worldMap[resultX, (int)posY] == 0) posX += dirX * stepSpeed;
-                            if (worldMap[(int)posX, resultY] == 0) posY += dirY * stepSpeed;
-                            if (random.Next(encounterChance) == 1) currentScreen = GameState.Battle;
 
-                            if (currentSteps >= 10)
-                            {
-                                switch (currentDangerLevel)
+                                if (rayDirY < 0)
                                 {
-                                    case DangerLevel.Low:
-                                        currentDangerLevel = DangerLevel.Medium;
-                                        currentSteps = 0;
-                                        break;
-                                    case DangerLevel.Medium:
-                                        currentDangerLevel = DangerLevel.High;
-                                        currentSteps = 0;
-                                        break;
+                                    stepY = -1;
+                                    sideDistY = (posY - mapY) * deltaDistY;
                                 }
-                            }
-
-                            currentSteps++;
-                        }
-                        if (Raylib.IsKeyPressed(KeyboardKey.S) || Raylib.IsKeyPressed(KeyboardKey.Down))
-                        {
-                            var resultX = (int)(posX - dirX * stepSpeed);
-                            var resultY = (int)(posY - dirY * stepSpeed);
-                            
-                            if (worldMap[resultX, (int)posY] == 0) posX -= dirX * stepSpeed;
-                            if (worldMap[(int)posX, resultY] == 0) posY -= dirY * stepSpeed;
-                            if (random.Next(encounterChance) == 1) currentScreen = GameState.Battle;
-                            
-                            if (currentSteps >= 10)
-                            {
-                                switch (currentDangerLevel)
+                                else
                                 {
-                                    case DangerLevel.Low:
-                                        currentDangerLevel = DangerLevel.Medium;
+                                    stepY = 1;
+                                    sideDistY = (mapY + 1.0 - posY) * deltaDistY;
+                                }
+
+                                while (hit == 0)
+                                {
+                                    if (sideDistX < sideDistY)
+                                    {
+                                        sideDistX += deltaDistX;
+                                        mapX += stepX;
+                                        side = 0;
+                                    }
+                                    else
+                                    {
+                                        sideDistY += deltaDistY;
+                                        mapY += stepY;
+                                        side = 1;
+                                    }
+
+                                    if (worldMap[mapX, mapY] > 0)
+                                        hit = 1;
+                                }
+
+                                if (side == 0)
+                                {
+                                    perpWallDist = (sideDistX - deltaDistX);
+                                }
+                                else
+                                {
+                                    perpWallDist = (sideDistY - deltaDistY);
+                                }
+
+                                var lineHeight = (int)(ScreenHeight / perpWallDist);
+
+                                var drawStart = -lineHeight / 2 + ScreenHeight / 2;
+                                if (drawStart < 0) drawStart = 0;
+                                var drawEnd = lineHeight / 2 + ScreenHeight / 2;
+                                if (drawEnd >= ScreenHeight) drawEnd = ScreenHeight - 1;
+
+                                Color colour;
+                                switch (worldMap[mapX, mapY])
+                                {
+                                    case 1:
+                                        colour = Color.Red;
                                         break;
-                                    case DangerLevel.Medium:
-                                        currentDangerLevel = DangerLevel.High;
+                                    case 2:
+                                        colour = Color.Green;
+                                        break;
+                                    case 3:
+                                        colour = Color.Blue;
+                                        break;
+                                    case 4:
+                                        colour = Color.White;
+                                        break;
+                                    default:
+                                        colour = Color.Yellow;
                                         break;
                                 }
+
+                                //give x and y side a different brightness
+                                //if(side == 1) {color = color / 2;}
+
+                                // Draw Walls
+                                Raylib.DrawLine(x, drawStart, x, drawEnd, colour);
+                                // Draw Ceiling
+                                Raylib.DrawLine(x, 0, x, drawStart, Color.Gold);
+                                //Draw Floor
+                                Raylib.DrawLine(x, ScreenHeight, x, drawEnd, Color.DarkGray);
                             }
 
-                            currentSteps++;
-                        }
-        
-                        if (Raylib.IsKeyPressed(KeyboardKey.D) || Raylib.IsKeyPressed(KeyboardKey.Right))
-                        {
-                            var oldDirX = dirX;
-                            var oldPlaneX = planeX;
-        
-                            dirX = dirX * Math.Cos(-stepTurn) - dirY * Math.Sin(-stepTurn);
-                            dirY = oldDirX * Math.Sin(-stepTurn) + dirY * Math.Cos(-stepTurn);
-        
-                            planeX = planeX * Math.Cos(-stepTurn) - planeY * Math.Sin(-stepTurn);
-                            planeY = oldPlaneX * Math.Sin(-stepTurn) + planeY * Math.Cos(-stepTurn);
-                        }
-                        if (Raylib.IsKeyPressed(KeyboardKey.A) || Raylib.IsKeyPressed(KeyboardKey.Left))
-                        {
-                            var oldDirX = dirX;
-                            var oldPlaneX = planeX;
-                            
-                            dirX = dirX * Math.Cos(stepTurn) - dirY * Math.Sin(stepTurn);
-                            dirY = oldDirX * Math.Sin(stepTurn) + dirY * Math.Cos(stepTurn);
-                            
-                            planeX = planeX * Math.Cos(stepTurn) - planeY * Math.Sin(stepTurn);
-                            planeY = oldPlaneX * Math.Sin(stepTurn) + planeY * Math.Cos(stepTurn);
+                            Raylib.DrawText("Defeat 5 enemies!", 1700, 50, 20, Color.Black);
+                            Raylib.DrawText($"Enemies defeated: {enemiesDefeated}", 1700, 80, 20, Color.Black);
+
+                            if (drawMap)
+                            {
+                                DrawMap(worldMap, posX, posY, dirX, dirY);
+                            }
+
+
+                            var frameTime = Raylib.GetFrameTime();
+
+                            var moveSpeed = frameTime * 5.0;
+                            var stepSpeed = 1;
+                            var rotSpeed = frameTime * 3.0;
+                            var stepTurn = Math.PI / 2;
+
+                            if (Raylib.IsKeyPressed(KeyboardKey.W) || Raylib.IsKeyPressed(KeyboardKey.Up))
+                            {
+                                var resultX = (int)(posX + dirX * stepSpeed);
+                                var resultY = (int)(posY + dirY * stepSpeed);
+
+                                if (worldMap[resultX, (int)posY] == 0) posX += dirX * stepSpeed;
+                                if (worldMap[(int)posX, resultY] == 0) posY += dirY * stepSpeed;
+                                if (random.Next(encounterChance) == 1) currentScreen = GameState.Battle;
+
+                                if (currentSteps >= 10)
+                                {
+                                    switch (currentDangerLevel)
+                                    {
+                                        case DangerLevel.Low:
+                                            currentDangerLevel = DangerLevel.Medium;
+                                            currentSteps = 0;
+                                            break;
+                                        case DangerLevel.Medium:
+                                            currentDangerLevel = DangerLevel.High;
+                                            currentSteps = 0;
+                                            break;
+                                    }
+                                }
+
+                                currentSteps++;
+                            }
+
+                            if (Raylib.IsKeyPressed(KeyboardKey.S) || Raylib.IsKeyPressed(KeyboardKey.Down))
+                            {
+                                var resultX = (int)(posX - dirX * stepSpeed);
+                                var resultY = (int)(posY - dirY * stepSpeed);
+
+                                if (worldMap[resultX, (int)posY] == 0) posX -= dirX * stepSpeed;
+                                if (worldMap[(int)posX, resultY] == 0) posY -= dirY * stepSpeed;
+                                if (random.Next(encounterChance) == 1) currentScreen = GameState.Battle;
+
+                                if (currentSteps >= 10)
+                                {
+                                    switch (currentDangerLevel)
+                                    {
+                                        case DangerLevel.Low:
+                                            currentDangerLevel = DangerLevel.Medium;
+                                            break;
+                                        case DangerLevel.Medium:
+                                            currentDangerLevel = DangerLevel.High;
+                                            break;
+                                    }
+                                }
+
+                                currentSteps++;
+                            }
+
+                            if (Raylib.IsKeyPressed(KeyboardKey.D) || Raylib.IsKeyPressed(KeyboardKey.Right))
+                            {
+                                var oldDirX = dirX;
+                                var oldPlaneX = planeX;
+
+                                dirX = dirX * Math.Cos(-stepTurn) - dirY * Math.Sin(-stepTurn);
+                                dirY = oldDirX * Math.Sin(-stepTurn) + dirY * Math.Cos(-stepTurn);
+
+                                planeX = planeX * Math.Cos(-stepTurn) - planeY * Math.Sin(-stepTurn);
+                                planeY = oldPlaneX * Math.Sin(-stepTurn) + planeY * Math.Cos(-stepTurn);
+                            }
+
+                            if (Raylib.IsKeyPressed(KeyboardKey.A) || Raylib.IsKeyPressed(KeyboardKey.Left))
+                            {
+                                var oldDirX = dirX;
+                                var oldPlaneX = planeX;
+
+                                dirX = dirX * Math.Cos(stepTurn) - dirY * Math.Sin(stepTurn);
+                                dirY = oldDirX * Math.Sin(stepTurn) + dirY * Math.Cos(stepTurn);
+
+                                planeX = planeX * Math.Cos(stepTurn) - planeY * Math.Sin(stepTurn);
+                                planeY = oldPlaneX * Math.Sin(stepTurn) + planeY * Math.Cos(stepTurn);
+                            }
+
+                            switch (currentDangerLevel)
+                            {
+                                case DangerLevel.Low:
+                                    Raylib.DrawCircleLines(circleX, circleY, 51, Color.Black);
+                                    Raylib.DrawCircle(circleX, circleY, 50, Color.SkyBlue);
+                                    encounterChance = 1000;
+                                    break;
+                                case DangerLevel.Medium:
+                                    Raylib.DrawCircleLines(circleX, circleY, 51, Color.Black);
+                                    Raylib.DrawCircle(circleX, circleY, 50, Color.Yellow);
+                                    encounterChance = 100;
+                                    break;
+                                case DangerLevel.High:
+                                    Raylib.DrawCircleLines(circleX, circleY, 51, Color.Black);
+                                    Raylib.DrawCircle(circleX, circleY, 50, Color.Red);
+                                    encounterChance = 10;
+                                    break;
+
+                            }
+
+                            if (Raylib.IsKeyPressed(KeyboardKey.M)) drawMap = !drawMap;
                         }
 
-                        switch (currentDangerLevel)
-                        {
-                            case DangerLevel.Low:
-                                Raylib.DrawCircleLines(circleX, circleY, 51, Color.Black);
-                                Raylib.DrawCircle(circleX, circleY, 50, Color.SkyBlue);
-                                encounterChance = 1000;
-                                break;
-                            case DangerLevel.Medium:
-                                Raylib.DrawCircleLines(circleX, circleY, 51, Color.Black);
-                                Raylib.DrawCircle(circleX, circleY, 50, Color.Yellow);
-                                encounterChance = 100;
-                                break;
-                            case DangerLevel.High:
-                                Raylib.DrawCircleLines(circleX, circleY, 51, Color.Black);
-                                Raylib.DrawCircle(circleX, circleY, 50, Color.Red);
-                                encounterChance = 10;
-                                break;
-                            
-                        }
-        
-                        if (Raylib.IsKeyPressed(KeyboardKey.M)) drawMap = !drawMap;
-                        
                         break;
                     case GameState.Pause:
                         Raylib.ClearBackground(Color.LightGray);
@@ -347,13 +386,162 @@ namespace raycaster_raylib
                         break;
                     case GameState.Battle:
                         Raylib.ClearBackground(Color.Beige);
-                        Raylib.DrawTexture(enemyImage, 800, 200, Color.Black);
+                        var enemyPosition = new Vector2
+                        {
+                            X = 800.0f,
+                            Y = 200.0f
+                        };
+                        var playerPosition = new Vector2
+                        {
+                            X = 800.0f,
+                            Y = 500.0f
+                        };
+                        Raylib.DrawTextureEx(enemyImage, enemyPosition, 0.0f, 8.0f, Color.White);
+                        Raylib.DrawTextureEx(playerImage, playerPosition, 0.0f, 8.0f, Color.White);
+                        
                         Raylib.DrawText("BATTLE!", 200, 200, 80, Color.Black);
                         Raylib.DrawText("Random monster has appeared", 200, 300, 40, Color.Black);
-                        Raylib.DrawText("Press 'X' to run away", 200, 400, 40, Color.Black);
+                        
+                        Raylib.DrawText($"Enemy Health: {enemy.Health}", 1200, 200, 30, Color.Black);
+                        Raylib.DrawText($"Player Health: {player.Health}", 1200, 500, 30, Color.Black);
+                        
+                        switch (currentTurn)
+                        {
+                            case Turn.PlayerTurn:
+                                if (player.IsDefending) player.IsDefending = false;
+                                Raylib.DrawText("Press 'A' to attack", 200, 500, 40, Color.Black);
+                                Raylib.DrawText("Press 'D' to Defend", 200, 600, 40, Color.Black);
+                                Raylib.DrawText("Press 'X' to run away", 200, 700, 40, Color.Black);
+                                if (Raylib.IsKeyPressed(KeyboardKey.A))
+                                {
+                                    if (enemy.IsDefending)
+                                    {
+                                        Raylib.DrawText($"-{player.Attack - enemy.Defence}", 840, 200, 30, Color.Black);
+                                        enemy.Health -= (player.Attack - enemy.Defence);
+                                    }
+                                    else
+                                    {
+                                        Raylib.DrawText($"-{player.Attack}", 840, 200, 30, Color.Black);
+                                        enemy.Health -= player.Attack;
+                                    }
+                                    currentTurn = Turn.EnemyTurn;
+                                }
+
+                                if (Raylib.IsKeyPressed(KeyboardKey.D))
+                                {
+                                    player.IsDefending = true;
+                                    currentTurn = Turn.EnemyTurn;
+                                }
+
+                                if (Raylib.IsKeyPressed(KeyboardKey.X))
+                                {
+                                    currentScreen = GameState.FirstPerson;
+                                }
+
+                                if (enemy.Health <= 0)
+                                {
+                                    enemiesDefeated++;
+                                    currentScreen = GameState.BattleVictory;
+                                }
+                                
+                                break;
+                            case Turn.EnemyTurn:
+                                if (enemy.IsDefending) enemy.IsDefending = false;
+                                var enemyLogic = new Random();
+                                var action = enemyLogic.Next(100);
+
+                                if (action >= 50)
+                                {
+                                    //attack
+                                    if (player.IsDefending)
+                                    {
+                                        Raylib.DrawText($"-{enemy.Attack - player.Defence}", 840, 700, 30, Color.Black);
+                                        player.Health -= (enemy.Attack - player.Defence);
+                                    }
+                                    else
+                                    {
+                                        Raylib.DrawText($"-{enemy.Attack}", 840, 500, 30, Color.Black);
+                                        player.Health -= enemy.Attack;
+                                    }
+                                    
+                                }
+                                else if (action < 50)
+                                {
+                                    //defend
+                                    enemy.IsDefending = true;
+                                }
+
+                                if (player.Health <= 0) currentScreen = GameState.GameOver;
+
+                                currentTurn = Turn.PlayerTurn;
+                                
+                                break;
+                        }
+                        
                         currentSteps = 0;
                         currentDangerLevel = DangerLevel.Low;
-                        if (Raylib.IsKeyPressed(KeyboardKey.X)) currentScreen = GameState.FirstPerson;
+                        break;
+                    case GameState.BattleVictory:
+                        Raylib.ClearBackground(Color.Gold);
+                        Raylib.DrawText("YOU WON!", 800, 600, 80, Color.Black);
+                        Raylib.DrawText("press enter to continue", 800, 800, 40, Color.Black);
+                        if (Raylib.IsKeyPressed(KeyboardKey.Enter))
+                        {
+                            currentScreen = GameState.FirstPerson;
+                            enemy.Health = 100;
+                        }
+                        break;
+                    case GameState.GameOver:
+                        Raylib.ClearBackground(Color.Black);
+                        Raylib.DrawText("YOU DIED", 800, 300, 80, Color.Red);
+                        Raylib.DrawText("GAME OVER", 800, 400, 80, Color.Red);
+                        Raylib.DrawText("press 'r' to go back to the main menu", 600, 600, 40, Color.White);
+
+                        if (Raylib.IsKeyPressed(KeyboardKey.R))
+                        {
+                            posX = 22.5;
+                            posY = 22.5;
+                            dirX = -1.0;
+                            dirY = 0.0;
+                            planeX = 0.0;
+                            planeY = 0.66;
+                            currentSteps = 0;
+                            enemiesDefeated = 0;
+
+                            player.Health = 100;
+                            player.IsDefending = false;
+
+                            enemy.Health = 100;
+                            enemy.IsDefending = false;
+                            
+                            currentScreen = GameState.MainMenu;
+                        }
+                        break;
+                    case GameState.GameVictory:
+                        Raylib.ClearBackground(Color.Green);
+                        Raylib.DrawText("YOU WON!", 600, 300, 80, Color.Black);
+                        Raylib.DrawText("GAME Complete", 600, 400, 80, Color.Black);
+                        Raylib.DrawText("press 'r' to go back to the main menu", 600, 600, 40, Color.White);
+                        
+                        if (Raylib.IsKeyPressed(KeyboardKey.R))
+                        {
+                            posX = 22.5;
+                            posY = 22.5;
+                            dirX = -1.0;
+                            dirY = 0.0;
+                            planeX = 0.0;
+                            planeY = 0.66;
+                            currentSteps = 0;
+                            enemiesDefeated = 0;
+
+                            player.Health = 100;
+                            player.IsDefending = false;
+
+                            enemy.Health = 100;
+                            enemy.IsDefending = false;
+                            
+                            currentScreen = GameState.MainMenu;
+                        }
                         break;
                 }
                
