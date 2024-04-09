@@ -62,7 +62,7 @@ namespace raycaster_raylib
                      {1,4,0,4,4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
                      {1,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
                      {1,4,4,4,4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-                     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
+                     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,5,4,3,2,1,1,1,1}
                  };
             
             var posX = 22.5;
@@ -103,6 +103,7 @@ namespace raycaster_raylib
             
             var enemyImage = Raylib.LoadTexture("../../../Resources/enemy.png");
             var playerImage = Raylib.LoadTexture("../../../Resources/player.png");
+            var wallTexture = Raylib.LoadTexture("../../../Resources/wallTexture2.png");
             
             Raylib.SetTargetFPS(60);
 
@@ -233,22 +234,41 @@ namespace raycaster_raylib
                                 var drawEnd = lineHeight / 2 + ScreenHeight / 2;
                                 if (drawEnd >= ScreenHeight) drawEnd = ScreenHeight - 1;
 
+                                var textureRectangle = new Rectangle
+                                {
+                                    Size = new Vector2
+                                    {
+                                        X = 50.0f,
+                                        Y = 1080.0f
+                                    }
+                                };
+
                                 Color colour;
                                 switch (worldMap[mapX, mapY])
                                 {
                                     case 1:
+                                        textureRectangle.X = 0.0f;
+                                        textureRectangle.Y = 0.0f;
                                         colour = Color.Red;
                                         break;
                                     case 2:
+                                        textureRectangle.X = 50.0f;
+                                        textureRectangle.Y = 50.0f;
                                         colour = Color.Green;
                                         break;
                                     case 3:
+                                        textureRectangle.X = 100.0f;
+                                        textureRectangle.Y = 100.0f;
                                         colour = Color.Blue;
                                         break;
                                     case 4:
+                                        textureRectangle.X = 150.0f;
+                                        textureRectangle.Y = 150.0f;
                                         colour = Color.White;
                                         break;
                                     default:
+                                        textureRectangle.X = 200.0f;
+                                        textureRectangle.Y = 200.0f;
                                         colour = Color.Yellow;
                                         break;
                                 }
@@ -256,8 +276,10 @@ namespace raycaster_raylib
                                 //give x and y side a different brightness
                                 //if(side == 1) {color = color / 2;}
 
+                                // Draw Textured Wall
+                                Raylib.DrawTextureRec(wallTexture, textureRectangle, new Vector2{X = x, Y = drawStart}, Color.White);
                                 // Draw Walls
-                                Raylib.DrawLine(x, drawStart, x, drawEnd, colour);
+                                //Raylib.DrawLine(x, drawStart, x, drawEnd, colour);
                                 // Draw Ceiling
                                 Raylib.DrawLine(x, 0, x, drawStart, Color.Gold);
                                 //Draw Floor
@@ -306,7 +328,6 @@ namespace raycaster_raylib
 
                                 currentSteps++;
                             }
-
                             if (Raylib.IsKeyPressed(KeyboardKey.S) || Raylib.IsKeyPressed(KeyboardKey.Down))
                             {
                                 var resultX = (int)(posX - dirX * stepSpeed);
@@ -343,7 +364,6 @@ namespace raycaster_raylib
                                 planeX = planeX * Math.Cos(-stepTurn) - planeY * Math.Sin(-stepTurn);
                                 planeY = oldPlaneX * Math.Sin(-stepTurn) + planeY * Math.Cos(-stepTurn);
                             }
-
                             if (Raylib.IsKeyPressed(KeyboardKey.A) || Raylib.IsKeyPressed(KeyboardKey.Left))
                             {
                                 var oldDirX = dirX;
