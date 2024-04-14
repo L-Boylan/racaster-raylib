@@ -103,7 +103,7 @@ namespace raycaster_raylib
             
             var enemyImage = Raylib.LoadTexture("../../../Resources/enemy.png");
             var playerImage = Raylib.LoadTexture("../../../Resources/player.png");
-            var wallTexture = Raylib.LoadTexture("../../../Resources/wallTexture2.png");
+            var wallTexture = Raylib.LoadTexture("../../../Resources/whiteWall.png");
             
             Raylib.SetTargetFPS(60);
 
@@ -234,50 +234,54 @@ namespace raycaster_raylib
                                 var drawEnd = lineHeight / 2 + ScreenHeight / 2;
                                 if (drawEnd >= ScreenHeight) drawEnd = ScreenHeight - 1;
 
-                                var textureRectangle = new Rectangle
+                                var rectXStart = 0;
+                                int rectXEnd;
+                                if (x != 0) rectXStart = x - 1;
+                                if (x == ScreenWidth) rectXEnd = ScreenWidth;
+                                else rectXEnd = x + 1;
+
+                                var sourceRect = new Rectangle
                                 {
-                                    Size = new Vector2
-                                    {
-                                        X = 50.0f,
-                                        Y = 1080.0f
-                                    }
+                                    X = rectXStart,
+                                    Y = 0,
+                                    Width = rectXEnd,
+                                    Height = 600,
+                                };
+                                var destRect = new Rectangle
+                                {
+                                    X = x,
+                                    Y = drawStart,
+                                    Width = x,
+                                    Height = drawEnd,
+                                };
+                                var texturePosition = new Vector2
+                                {
+                                    X = 0,
+                                    Y = 0
                                 };
 
                                 Color colour;
                                 switch (worldMap[mapX, mapY])
                                 {
                                     case 1:
-                                        textureRectangle.X = 0.0f;
-                                        textureRectangle.Y = 0.0f;
                                         colour = Color.Red;
                                         break;
                                     case 2:
-                                        textureRectangle.X = 50.0f;
-                                        textureRectangle.Y = 50.0f;
                                         colour = Color.Green;
                                         break;
                                     case 3:
-                                        textureRectangle.X = 100.0f;
-                                        textureRectangle.Y = 100.0f;
                                         colour = Color.Blue;
                                         break;
                                     case 4:
-                                        textureRectangle.X = 150.0f;
-                                        textureRectangle.Y = 150.0f;
                                         colour = Color.White;
                                         break;
                                     default:
-                                        textureRectangle.X = 200.0f;
-                                        textureRectangle.Y = 200.0f;
                                         colour = Color.Yellow;
                                         break;
                                 }
 
-                                //give x and y side a different brightness
-                                //if(side == 1) {color = color / 2;}
-
                                 // Draw Textured Wall
-                                Raylib.DrawTextureRec(wallTexture, textureRectangle, new Vector2{X = x, Y = drawStart}, Color.White);
+                                Raylib.DrawTexturePro(wallTexture, sourceRect, destRect, texturePosition, 0.0f, Color.White);
                                 // Draw Walls
                                 //Raylib.DrawLine(x, drawStart, x, drawEnd, colour);
                                 // Draw Ceiling
@@ -568,6 +572,10 @@ namespace raycaster_raylib
                 Raylib.DrawFPS(10, 10);
                 Raylib.EndDrawing();
             }
+            
+            Raylib.UnloadTexture(enemyImage);
+            Raylib.UnloadTexture(playerImage);
+            Raylib.UnloadTexture(wallTexture);
             
             Raylib.CloseWindow();
         }
